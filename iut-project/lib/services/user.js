@@ -7,38 +7,39 @@ const Jwt = require('@hapi/jwt');
 
 module.exports = class UserService extends Service {
 
-    create(user){
-
+    async create(user) {
         const { User } = this.server.models();
+        const { mailService } = this.server.services();
 
-        return User.query().insertAndFetch(user);
+        const newUser = await User.query().insertAndFetch(user);
+        
+        try {
+            await mailService.sendWelcomeEmail(newUser);
+        } catch (error) {
+            console.error('Failed to send welcome email:', error);
+            // On continue même si l'envoi d'email échoue
+        }
+
+        return newUser;
     }
 
-    findAll(){
-
+    findAll() {
         const { User } = this.server.models();
-
         return User.query();
     }
 
-    delete(id){
-
+    delete(id) {
         const { User } = this.server.models();
-
         return User.query().deleteById(id);
     }
 
-    update(id, user){
-
+    update(id, user) {
         const { User } = this.server.models();
-
         return User.query().findById(id).patch(user);
     }
 
     async login(email, password) {
-
         const { User } = this.server.models();
-
         const user = await User.query().findOne({ email, password });
 
         if (!user) {
@@ -49,13 +50,11 @@ module.exports = class UserService extends Service {
             {
                 aud: 'urn:audience:iut',
                 iss: 'urn:issuer:iut',
-                firstName: user.firstName,
-                lastName: user.lastName,
                 email: user.email,
-                scope: user.roles
+                id: user.id
             },
             {
-                key: 'random_string', // La clé qui est définit dans lib/auth/strategies/jwt.js
+                key: 'random_string',
                 algorithm: 'HS512'
             },
             {
@@ -65,4 +64,4 @@ module.exports = class UserService extends Service {
 
         return token;
     }
-}
+};
