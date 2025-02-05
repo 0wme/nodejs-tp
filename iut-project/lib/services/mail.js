@@ -44,7 +44,6 @@ module.exports = class MailService extends Service {
             console.log('Welcome email sent to:', user.email);
             console.log('Message ID:', info.messageId);
             
-            // URL pour voir l'email dans Ethereal
             const previewUrl = nodemailer.getTestMessageUrl(info);
             console.log('Preview URL:', previewUrl);
             
@@ -56,5 +55,79 @@ module.exports = class MailService extends Service {
             console.error('Failed to send welcome email:', error);
             throw error;
         }
+    }
+
+    async sendNewMovieNotification(users, movie) {
+        const subject = `New Movie Added: ${movie.title}`;
+        const html = `
+            <h1>New Movie Added to Our Library!</h1>
+            <h2>${movie.title}</h2>
+            <p><strong>Director:</strong> ${movie.director}</p>
+            <p><strong>Release Date:</strong> ${new Date(movie.releaseDate).toLocaleDateString()}</p>
+            <p><strong>Description:</strong> ${movie.description}</p>
+            <p>Log in to your account to add this movie to your favorites!</p>
+            <p>Best regards,<br>The IUT Project Team</p>
+        `;
+
+        const results = [];
+        for (const user of users) {
+            try {
+                const info = await this.transporter.sendMail({
+                    from: `"IUT Project" <${process.env.MAIL_USER}>`,
+                    to: user.email,
+                    subject,
+                    html
+                });
+                console.log('New movie notification sent to:', user.email);
+                console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+                results.push({ email: user.email, success: true });
+            } catch (error) {
+                console.error('Failed to send new movie notification to:', user.email, error);
+                results.push({ email: user.email, success: false, error: error.message });
+            }
+        }
+        return results;
+    }
+
+    async sendMovieUpdateNotification(users, movie, changes) {
+        const subject = `Movie Updated: ${movie.title}`;
+        const changesHtml = Object.entries(changes)
+            .map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`)
+            .join('');
+
+        const html = `
+            <h1>Movie Update Notification</h1>
+            <h2>${movie.title}</h2>
+            <p>This movie has been updated with the following changes:</p>
+            <ul>
+                ${changesHtml}
+            </ul>
+            <p><strong>Current Details:</strong></p>
+            <ul>
+                <li><strong>Director:</strong> ${movie.director}</li>
+                <li><strong>Release Date:</strong> ${new Date(movie.releaseDate).toLocaleDateString()}</li>
+                <li><strong>Description:</strong> ${movie.description}</li>
+            </ul>
+            <p>Best regards,<br>The IUT Project Team</p>
+        `;
+
+        const results = [];
+        for (const user of users) {
+            try {
+                const info = await this.transporter.sendMail({
+                    from: `"IUT Project" <${process.env.MAIL_USER}>`,
+                    to: user.email,
+                    subject,
+                    html
+                });
+                console.log('Movie update notification sent to:', user.email);
+                console.log('Preview URL:', nodemailer.getTestMessageUrl(info));
+                results.push({ email: user.email, success: true });
+            } catch (error) {
+                console.error('Failed to send movie update notification to:', user.email, error);
+                results.push({ email: user.email, success: false, error: error.message });
+            }
+        }
+        return results;
     }
 };

@@ -7,18 +7,65 @@ module.exports = class MovieService extends Service {
 
     async create(movie) {
         const { Movie } = this.server.models();
+        const { mailService } = this.server.services();
+        const { User } = this.server.models();
         
-        return await Movie.query().insert(movie);
+        // Créer le film
+        const newMovie = await Movie.query().insert(movie);
+
+        try {
+            // Récupérer tous les utilisateurs pour les notifier
+            const users = await User.query();
+            
+            // Envoyer les notifications
+            await mailService.sendNewMovieNotification(users, newMovie);
+        } catch (error) {
+            console.error('Failed to send new movie notifications:', error);
+            // On continue même si l'envoi des notifications échoue
+        }
+
+        return newMovie;
     }
 
-    async update(id, movie) {
-        const { Movie } = this.server.models();
+    async update(id, movieData) {
+        const { Movie, User } = this.server.models();
+        const { mailService } = this.server.services();
         
-        const updatedMovie = await Movie.query()
-            .patchAndFetchById(id, movie);
-
-        if (!updatedMovie) {
+        // Récupérer l'ancien état du film
+        const oldMovie = await Movie.query().findById(id);
+        if (!oldMovie) {
             throw Boom.notFound('Movie not found');
+        }
+
+        // Mettre à jour le film
+        const updatedMovie = await Movie.query()
+            .patchAndFetchById(id, movieData);
+
+        try {
+            // Identifier les changements
+            const changes = {};
+            for (const [key, value] of Object.entries(movieData)) {
+                if (oldMovie[key] !== value) {
+                    changes[key] = value;
+                }
+            }
+
+            // Si des changements ont été effectués
+            if (Object.keys(changes).length > 0) {
+                // Récupérer les utilisateurs qui ont ce film en favoris
+                const users = await User.query()
+                    .joinRelated('favoriteMovies')
+                    .where('favoriteMovies.id', id)
+                    .distinct('user.*');
+
+                // Envoyer les notifications aux utilisateurs concernés
+                if (users.length > 0) {
+                    await mailService.sendMovieUpdateNotification(users, updatedMovie, changes);
+                }
+            }
+        } catch (error) {
+            console.error('Failed to send movie update notifications:', error);
+            // On continue même si l'envoi des notifications échoue
         }
 
         return updatedMovie;
@@ -54,7 +101,7 @@ module.exports = class MovieService extends Service {
     async addToFavorites(userId, movieId) {
         const { Movie } = this.server.models();
         
-        // Vérifie si le film existe
+        // Vérifier si le film existe
         const movie = await this.getById(movieId);
         
         try {
@@ -75,7 +122,7 @@ module.exports = class MovieService extends Service {
         const deleted = await Movie.relatedQuery('favoritedBy')
             .for(movieId)
             .unrelate()
-            .where('users.id', userId);
+            .where('user.id', userId);
             
         if (!deleted) {
             throw Boom.notFound('Movie not found in favorites');
