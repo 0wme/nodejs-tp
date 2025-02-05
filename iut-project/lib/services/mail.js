@@ -9,21 +9,21 @@ module.exports = class MailService extends Service {
         super();
         
         this.transporter = nodemailer.createTransport({
-            host: 'smtp.ethereal.email',
-            port: 587,
+            host: process.env.MAIL_HOST || 'smtp.ethereal.email',
+            port: process.env.MAIL_PORT || 587,
             secure: false,
             auth: {
-                user: 'clifford60@ethereal.email',
-                pass: 'S163jShn8PqQpvy2zf'
+                user: process.env.MAIL_USER,
+                pass: process.env.MAIL_PASS
             }
         });
 
-        console.log('Mail service initialized with account: clifford60@ethereal.email');
+        console.log('Mail service initialized with account:', process.env.MAIL_USER);
     }
 
     async sendWelcomeEmail(user) {
         const mailOptions = {
-            from: '"IUT Project" <clifford60@ethereal.email>',
+            from: `"IUT Project" <${process.env.MAIL_USER}>`,
             to: user.email,
             subject: 'Welcome to IUT Project!',
             html: `
@@ -49,12 +49,11 @@ module.exports = class MailService extends Service {
             console.log('Preview URL:', previewUrl);
             
             return {
-                success: true,
                 messageId: info.messageId,
-                previewUrl: previewUrl
+                previewUrl
             };
         } catch (error) {
-            console.error('Error sending welcome email:', error);
+            console.error('Failed to send welcome email:', error);
             throw error;
         }
     }
