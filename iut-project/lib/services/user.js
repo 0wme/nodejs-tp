@@ -17,7 +17,6 @@ module.exports = class UserService extends Service {
             await mailService.sendWelcomeEmail(newUser);
         } catch (error) {
             console.error('Failed to send welcome email:', error);
-            // On continue même si l'envoi d'email échoue
         }
 
         return newUser;
@@ -46,19 +45,27 @@ module.exports = class UserService extends Service {
             throw Boom.unauthorized('Invalid credentials');
         }
 
+        const roles = user.roles || [];
+        if (roles.includes('admin') && !roles.includes('user')) {
+            roles.push('user');
+        }
+
+        console.log('User roles:', roles);
+
         const token = Jwt.token.generate(
             {
                 aud: 'urn:audience:iut',
                 iss: 'urn:issuer:iut',
                 email: user.email,
-                id: user.id
+                id: user.id,
+                scope: roles
             },
             {
-                key: 'random_string',
+                key: process.env.JWT_SECRET || 'secret',
                 algorithm: 'HS512'
             },
             {
-                ttlSec: 14400 // 4 hours
+                ttlSec: 14400
             }
         );
 

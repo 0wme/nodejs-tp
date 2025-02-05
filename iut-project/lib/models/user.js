@@ -41,5 +41,22 @@ module.exports = class User extends Model {
         return ['roles']
     }
 
+    static get relationMappings() {
+        const Movie = require('./movie');
 
+        return {
+            favoriteMovies: {
+                relation: Model.ManyToManyRelation,
+                modelClass: Movie,
+                join: {
+                    from: 'user.id',
+                    through: {
+                        from: 'user_favorites.user_id',
+                        to: 'user_favorites.movie_id'
+                    },
+                    to: 'movies.id'
+                }
+            }
+        };
+    }
 };
