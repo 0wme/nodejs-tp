@@ -1,5 +1,7 @@
 # IUT Project - API Movies
 
+J'ai mit des screens que de mon côté l'application fonctionne au cas ou. Je n'ai pas réussi à mettre en place la dernière demande, je pense qu'il fallait utiliser RabbitMQ mais j'ai pas réussi à le mettre en place.
+
 ## Description
 Ce projet est une API RESTful construite avec Hapi.js permettant de gérer des films et des utilisateurs. L'API offre des fonctionnalités d'authentification, de gestion de films, et inclut un service d'envoi d'emails.
 
