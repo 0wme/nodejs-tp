@@ -98,6 +98,6 @@ Pour exécuter les tests :
 ```bash
 npm test
 ```
+<img width="1723" alt="rr" src="https://github.com/user-attachments/assets/450b054d-0593-4465-b7f7-93fdb7b9b42c" />
+<img width="1728" alt="image" src="https://github.com/user-attachments/assets/d23654d3-be49-45e0-b00b-d1d069a61048" />
 
-## Contribution
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
