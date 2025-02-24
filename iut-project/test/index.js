@@ -2,17 +2,17 @@
 
 // Load modules
 
-const Code = require('@hapi/code');
 const Lab = require('@hapi/lab');
-const Server = require('../server');
+const Code = require('@hapi/code');
 const Package = require('../package.json');
+const Server = require('../server');
 
 // Test shortcuts
 
 const { describe, it } = exports.lab = Lab.script();
 const { expect } = Code;
 
-describe('Deployment', () => {
+describe('Server', () => {
 
     it('registers the main plugin.', async () => {
 
