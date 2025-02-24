@@ -104,5 +104,28 @@ module.exports = [
 
             return await userService.login(request.payload.email, request.payload.password);
         }
+    },
+    {
+        method: 'patch',
+        path: '/user/{id}/promote',
+        options: {
+            auth: {
+                scope: ['admin']
+            },
+            tags: ['api'],
+            validate: {
+                params: Joi.object({
+                    id: Joi.number().required()
+                })
+            },
+            description: 'Promote user to admin role (admin only)'
+        },
+        handler: async (request, h) => {
+            const { userService } = request.services();
+            
+            await userService.promoteToAdmin(request.params.id);
+            
+            return { message: 'User promoted to admin successfully' };
+        }
     }
 ];

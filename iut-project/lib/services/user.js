@@ -71,4 +71,17 @@ module.exports = class UserService extends Service {
 
         return token;
     }
+
+    async promoteToAdmin(id) {
+        const { User } = this.server.models();
+        
+        const user = await User.query().findById(id);
+        if (!user) {
+            throw Boom.notFound('User not found');
+        }
+
+        return await User.query()
+            .findById(id)
+            .patch({ role: 'admin' });
+    }
 };
